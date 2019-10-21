@@ -2,6 +2,7 @@ package com.webappclouds.sunsetapp
 
 import android.os.AsyncTask
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
@@ -19,11 +20,11 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
     }
 
-    protected fun getSunset(view: View) {
+    fun getSunset(view: View) {
         var city = etCityName.text.toString()
-        val url =
-            "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%20in%20(select%20woeid%20from%20geo.places(1)%20where%20text%3D%22" + city + "%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys"
+        val url = "https://api.sunrise-sunset.org/json?lat=39.702770&lng=-75.111961"
         MyAsyncTask().execute(url)
+        Log.wtf("TAG", "Called")
     }
 
     inner class MyAsyncTask : AsyncTask<String, String, String>() {
@@ -39,7 +40,7 @@ class MainActivity : AppCompatActivity() {
                 val urlConnect = url.openConnection() as HttpURLConnection
                 urlConnect.connectTimeout = 7000
 
-                var inString = ConvertStreamToString(urlConnect.inputStream)
+                var inString = convertStreamToString(urlConnect.inputStream)
 
                 publishProgress(inString)
             } catch (ex: Exception) {
@@ -52,11 +53,9 @@ class MainActivity : AppCompatActivity() {
         override fun onProgressUpdate(vararg values: String?) {
             try {
                 var json = JSONObject(values[0])
-                val query = json.getJSONObject("query")
-                val results = query.getJSONObject("results")
-                val channel = results.getJSONObject("channel")
-                val astronomy = channel.getJSONObject("astronomy")
-                var sunrise = astronomy.getString("sunrise")
+                val results = json.getJSONObject("results")
+                val sunrise = results.getString("sunrise")
+                Log.wtf("TAG", "Query: $results")
 
                 tvSunSetTime.text = " Sunrise is $sunrise"
             } catch (ex: Exception) {
@@ -68,7 +67,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun ConvertStreamToString(inputStream: InputStream): String {
+    fun convertStreamToString(inputStream: InputStream): String {
         val bufferReader = BufferedReader(InputStreamReader(inputStream))
         var line: String
         var allString = ""
